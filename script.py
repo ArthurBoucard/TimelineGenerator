@@ -1,66 +1,76 @@
 import openpyxl
-import requests
+import os
+from github import Github
+from dotenv import load_dotenv
 
-# GitHub API base URL
-API_BASE_URL = 'https://api.github.com'
+# Load the .env values
+load_dotenv()
 
-# GitHub project board owner and repository
-PROJECT_BOARD_OWNER = '<OWNER>'
-PROJECT_BOARD_REPO = '<REPO>'
+# Enter your GitHub API token here
+API_TOKEN = os.environ.get("GITHUB_TOKEN")
 
-# GitHub API access token (required for private repositories)
-# Generate a personal access token at https://github.com/settings/tokens
-ACCESS_TOKEN = '<ACCESS_TOKEN>'
+# Enter the repository owner and name here
+ORGANISATION = os.environ.get("ORGANISATION")
+REPO_NAME = os.environ.get("REPO_NAME")
 
-# GitHub project board ID
-PROJECT_BOARD_ID = '<PROJECT_BOARD_ID>'
+# Enter the milestone number here
+MILESTONE_NUMBER = int(os.environ.get("MILESTONE_NUMBER"))
 
-# GitHub milestone number
-MILESTONE_NUMBER = '<MILESTONE_NUMBER>'
+# Connect to the GitHub API
+g = Github(API_TOKEN)
 
-# Excel workbook and worksheet to create
-EXCEL_WORKBOOK = 'timeline.xlsx'
-EXCEL_WORKSHEET = 'Timeline'
+# Get the organisation
+org = g.get_organization(ORGANISATION)
 
+# Get the repository
+repo = org.get_repo("Thurii-API")
 
-def main():
-    # get the list of issues in the specified milestone
-    issues = get_milestone_issues(PROJECT_BOARD_OWNER, PROJECT_BOARD_REPO, MILESTONE_NUMBER)
+# Get the open issues in the repository
+issues = repo.get_issues()
 
-    # create an Excel workbook and worksheet
-    workbook = openpyxl.Workbook()
-    worksheet = workbook.active
-    worksheet.title = EXCEL_WORKSHEET
+# Get the milestone
+milestone = repo.get_milestone(MILESTONE_NUMBER)
 
-    # write the issue names and durations to the worksheet
-    for issue in issues:
-        worksheet.append([issue['title'], issue['duration']])
+# Create a new Excel workbook
+wb = openpyxl.Workbook()
 
-    # save the workbook
-    workbook.save(EXCEL_WORKBOOK)
+# Create a new sheet for the timeline
+sheet = wb.active
+sheet.title = "Timeline " + str(milestone.number)
 
+# Create the header row for the timeline
+sheet["A1"] = "Issue"
+sheet["B1"] = "Week 1"
+sheet["C1"] = "Week 2"
+sheet["D1"] = "Week 3"
+sheet["E1"] = "Week 4"
 
-def get_milestone_issues(owner, repo, milestone_number):
-    """
-    Get the list of issues in the specified milestone.
-    """
-    # construct the URL for the GitHub API request
-    url = f'{API_BASE_URL}/repos/{owner}/{repo}/issues?milestone={milestone_number}&state=all'
+# Iterate over the issues and add them to the timeline
+row = 2
+for issue in issues:
+    # Skip issues not in the milestone
+    if issue.milestone == None or issue.milestone.number != MILESTONE_NUMBER:
+        continue
 
-    # send the request and parse the JSON response
-    response = requests.get(url, headers={'Authorization': f'token {ACCESS_TOKEN}'})
-    issues = response.json()
+    # Get the issue information
+    title = issue.title
+    body = issue.body
 
-    # extract the issue names and durations from the response
-    results = []
-    for issue in issues:
-        results.append({
-            'title': issue['title'],
-            'duration': issue['duration']
-        })
+    # Split the body to get the week assigned
+    body = body.split("\r", 1)[0]
+    body = body.split(" ")
+    body.pop(0)
 
-    return results
+    # Add the issue information to the timeline
+    sheet[f"A{row}"] = title
+    
+    # Fill the cells corresponding to the week aasigned
+    for week in body:
+        sheet[chr(ord('@') + int(week) + 1) + str(row)].fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor="f2000c")
 
+    break
+    # Move to the next row
+    row += 1
 
-if __name__ == '__main__':
-    main()
+# Save the Excel workbook
+wb.save("timeline.xlsx")
