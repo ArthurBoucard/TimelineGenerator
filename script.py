@@ -40,10 +40,8 @@ sheet.title = "Timeline " + str(milestone.number)
 
 # Create the header row for the timeline
 sheet["A1"] = "Issue"
-sheet["B1"] = "Week 1"
-sheet["C1"] = "Week 2"
-sheet["D1"] = "Week 3"
-sheet["E1"] = "Week 4"
+for i in range(12):
+    sheet[chr(ord('@') + i + 2) + '1'] = "Week " + str(i + 1)
 
 # Iterate over the issues and add them to the timeline
 row = 2
