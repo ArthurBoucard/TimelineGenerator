@@ -15,6 +15,9 @@ MILESTONE_NUMBER=xx
     "authors" : {
         "ArthurBoucard" : "f2000c",
         "..."
+    },
+    "layout" : {
+        "order" : "alphabetical"
     }
 }
 ```

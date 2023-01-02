@@ -1,6 +1,7 @@
 import openpyxl
 import os
 import json
+import layout
 from github import Github
 from dotenv import load_dotenv
 
@@ -37,8 +38,8 @@ milestone = repo.get_milestone(MILESTONE_NUMBER)
 
 # Open the JSON file
 with open('config.json', 'r') as f:
-  # Load the JSON data into a Python object
-  config = json.load(f)
+    # Load the JSON data into a Python object
+    config = json.load(f)
 
 # Create a new Excel workbook
 wb = openpyxl.Workbook()
@@ -48,9 +49,10 @@ sheet = wb.active
 sheet.title = "Timeline " + str(milestone.number)
 
 # Create the header row for the timeline
-sheet["A1"] = "Issue"
+sheet["A1"] = "Assignees"
+sheet["B1"] = "Issue"
 for i in range(12):
-    sheet[chr(ord('@') + i + 2) + '1'] = "Week " + str(i + 1)
+    sheet[chr(ord('@') + i + 3) + '1'] = "Week " + str(i + 1)
 
 # Iterate over the issues and add them to the timeline
 row = 2
@@ -70,18 +72,17 @@ for issue in open_issues and closed_issues:
     body.pop(0)
 
     # Add the issue information to the timeline
-    sheet[f"A{row}"] = title
-
-    # Make column size fit text length
-    if len(title) > sheet.column_dimensions['A'].width:
-        sheet.column_dimensions['A'].width = len(title)
+    sheet[f"A{row}"] = assignee
+    sheet[f"B{row}"] = title
     
     # Fill the cells corresponding to the week aasigned
     for week in body:
-        sheet[chr(ord('@') + int(week) + 1) + str(row)].fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor=config['authors'][assignee])
+        sheet[chr(ord('@') + int(week) + 2) + str(row)].fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor=config['authors'][assignee])
 
     # Move to the next row
     row += 1
 
 # Save the Excel workbook
 wb.save("timeline.xlsx")
+
+layout.apply_layout()
