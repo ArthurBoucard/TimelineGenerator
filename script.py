@@ -23,10 +23,13 @@ g = Github(API_TOKEN)
 org = g.get_organization(ORGANISATION)
 
 # Get the repository
-repo = org.get_repo("Thurii-API")
+repo = org.get_repo(REPO_NAME)
 
 # Get the open issues in the repository
-issues = repo.get_issues()
+open_issues = repo.get_issues(state="open")
+
+# Get the closed issues in the repository
+closed_issues = repo.get_issues(state="closed")
 
 # Get the milestone
 milestone = repo.get_milestone(MILESTONE_NUMBER)
@@ -45,7 +48,7 @@ for i in range(12):
 
 # Iterate over the issues and add them to the timeline
 row = 2
-for issue in issues:
+for issue in open_issues and closed_issues:
     # Skip issues not in the milestone
     if issue.milestone == None or issue.milestone.number != MILESTONE_NUMBER:
         continue
@@ -61,12 +64,15 @@ for issue in issues:
 
     # Add the issue information to the timeline
     sheet[f"A{row}"] = title
+
+    # Make column size fit text length
+    if len(title) > sheet.column_dimensions['A'].width:
+        sheet.column_dimensions['A'].width = len(title)
     
     # Fill the cells corresponding to the week aasigned
     for week in body:
         sheet[chr(ord('@') + int(week) + 1) + str(row)].fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor="f2000c")
 
-    break
     # Move to the next row
     row += 1
 
