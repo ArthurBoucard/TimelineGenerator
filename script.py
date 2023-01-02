@@ -77,7 +77,7 @@ for issue in open_issues and closed_issues:
     
     # Fill the cells corresponding to the week aasigned
     for week in body:
-        sheet[chr(ord('@') + int(week) + 2) + str(row)].fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor=config['authors'][assignee])
+        sheet[chr(ord('@') + int(week) + 2) + str(row)].value = assignee
 
     # Move to the next row
     row += 1
