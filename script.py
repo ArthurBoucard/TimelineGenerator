@@ -1,5 +1,6 @@
 import openpyxl
 import os
+import json
 from github import Github
 from dotenv import load_dotenv
 
@@ -34,6 +35,11 @@ closed_issues = repo.get_issues(state="closed")
 # Get the milestone
 milestone = repo.get_milestone(MILESTONE_NUMBER)
 
+# Open the JSON file
+with open('config.json', 'r') as f:
+  # Load the JSON data into a Python object
+  config = json.load(f)
+
 # Create a new Excel workbook
 wb = openpyxl.Workbook()
 
@@ -56,6 +62,7 @@ for issue in open_issues and closed_issues:
     # Get the issue information
     title = issue.title
     body = issue.body
+    assignee = issue.assignee.login
 
     # Split the body to get the week assigned
     body = body.split("\r", 1)[0]
@@ -71,7 +78,7 @@ for issue in open_issues and closed_issues:
     
     # Fill the cells corresponding to the week aasigned
     for week in body:
-        sheet[chr(ord('@') + int(week) + 1) + str(row)].fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor="f2000c")
+        sheet[chr(ord('@') + int(week) + 1) + str(row)].fill = openpyxl.styles.PatternFill(fill_type="solid", fgColor=config['authors'][assignee])
 
     # Move to the next row
     row += 1
